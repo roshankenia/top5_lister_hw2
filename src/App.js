@@ -76,13 +76,38 @@ class App extends React.Component {
   };
   renameItem = (index, textValue) => {
     let newCurrentList = this.state.currentList;
-    console.log(newCurrentList.items);
+
     for (let i = 0; i < newCurrentList.items.length; i++) {
       if (i === index) {
         newCurrentList.items[i] = textValue;
       }
     }
-    console.log(newCurrentList.items);
+
+    this.setState(
+      (prevState) => ({
+        currentList: newCurrentList,
+        sessionData: {
+          nextKey: prevState.sessionData.nextKey,
+          counter: prevState.sessionData.counter,
+          keyNamePairs: prevState.sessionData.keyNamePairs,
+        },
+      }),
+      () => {
+        // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
+        // THE TRANSACTION STACK IS CLEARED
+        this.db.mutationUpdateList(newCurrentList);
+        this.db.mutationUpdateSessionData(this.state.sessionData);
+      }
+    );
+  };
+
+  swapItem = (newIndex, oldIndex) => {
+    let newCurrentList = this.state.currentList;
+    newCurrentList.items.splice(
+      newIndex,
+      0,
+      newCurrentList.items.splice(oldIndex, 1)[0]
+    );
 
     this.setState(
       (prevState) => ({
@@ -197,6 +222,7 @@ class App extends React.Component {
         <Workspace
           currentList={this.state.currentList}
           renameItemCallback={this.renameItem}
+          swapItemCallback={this.swapItem}
         />
         <Statusbar currentList={this.state.currentList} />
         <DeleteModal hideDeleteListModalCallback={this.hideDeleteListModal} />
