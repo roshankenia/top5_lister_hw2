@@ -59,10 +59,19 @@ export default class ItemCard extends React.Component {
 
   handleDragOver = (event) => {
     event.preventDefault();
+
+    let index = this.state.index;
+    this.props.itemDragOverCallback(index);
+
   };
 
   render() {
-    const { value, index } = this.props;
+    const { value, index, dragOver } = this.props;
+
+    let dragOverClass = ""
+    if(dragOver){
+      dragOverClass = "top5-item-dragged-to";
+    }
     if (this.state.editActive) {
       return (
         <input
@@ -78,7 +87,7 @@ export default class ItemCard extends React.Component {
       return (
         <div
           id={"item-" + index}
-          className={"top5-item"}
+          className={"top5-item "+dragOverClass}
           onClick={this.handleClick}
           draggable={"true"}
           onDragStart={this.handleDragStart}

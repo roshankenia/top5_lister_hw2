@@ -24,6 +24,7 @@ class App extends React.Component {
     // SETUP THE INITIAL STATE
     this.state = {
       currentList: null,
+      currentItemOver: null,
       sessionData: loadedSessionData,
     };
   }
@@ -61,6 +62,7 @@ class App extends React.Component {
     this.setState(
       (prevState) => ({
         currentList: newList,
+        currentItemOver: prevState.currentItemOver,
         sessionData: {
           nextKey: prevState.sessionData.nextKey + 1,
           counter: prevState.sessionData.counter + 1,
@@ -86,6 +88,7 @@ class App extends React.Component {
     this.setState(
       (prevState) => ({
         currentList: newCurrentList,
+        currentItemOver: prevState.currentItemOver,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -101,6 +104,28 @@ class App extends React.Component {
     );
   };
 
+  itemDragOver = (index) => {
+    let newCurrentItemOver = index;
+
+
+    this.setState(
+      (prevState) => ({
+        currentList: prevState.currentList,
+        currentItemOver: newCurrentItemOver,
+        sessionData: {
+          nextKey: prevState.sessionData.nextKey,
+          counter: prevState.sessionData.counter,
+          keyNamePairs: prevState.sessionData.keyNamePairs,
+        },
+      }),
+      () => {
+        // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
+        // THE TRANSACTION STACK IS CLEARED
+      }
+    );
+
+  }
+
   swapItem = (newIndex, oldIndex) => {
     let newCurrentList = this.state.currentList;
     newCurrentList.items.splice(
@@ -112,6 +137,7 @@ class App extends React.Component {
     this.setState(
       (prevState) => ({
         currentList: newCurrentList,
+        currentItemOver: null,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -146,6 +172,7 @@ class App extends React.Component {
     this.setState(
       (prevState) => ({
         currentList: prevState.currentList,
+        currentItemOver: prevState.currentItemOver,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -168,6 +195,7 @@ class App extends React.Component {
     this.setState(
       (prevState) => ({
         currentList: newCurrentList,
+        currentItemOver: prevState.currentItemOver,
         sessionData: prevState.sessionData,
       }),
       () => {
@@ -180,6 +208,7 @@ class App extends React.Component {
     this.setState(
       (prevState) => ({
         currentList: null,
+        currentItemOver: prevState.currentItemOver,
         listKeyPairMarkedForDeletion: prevState.listKeyPairMarkedForDeletion,
         sessionData: this.state.sessionData,
       }),
@@ -221,8 +250,10 @@ class App extends React.Component {
         />
         <Workspace
           currentList={this.state.currentList}
+          currentItemOver={this.state.currentItemOver}
           renameItemCallback={this.renameItem}
           swapItemCallback={this.swapItem}
+          itemDragOverCallback={this.itemDragOver}
         />
         <Statusbar currentList={this.state.currentList} />
         <DeleteModal hideDeleteListModalCallback={this.hideDeleteListModal} />
