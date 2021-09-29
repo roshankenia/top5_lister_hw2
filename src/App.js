@@ -25,6 +25,7 @@ class App extends React.Component {
     this.state = {
       currentList: null,
       currentItemOver: null,
+      currentDeleteList: null,
       sessionData: loadedSessionData,
     };
   }
@@ -63,6 +64,7 @@ class App extends React.Component {
       (prevState) => ({
         currentList: newList,
         currentItemOver: prevState.currentItemOver,
+        currentDeleteList: prevState.currentDeleteList,
         sessionData: {
           nextKey: prevState.sessionData.nextKey + 1,
           counter: prevState.sessionData.counter + 1,
@@ -73,6 +75,38 @@ class App extends React.Component {
         // PUTTING THIS NEW LIST IN PERMANENT STORAGE
         // IS AN AFTER EFFECT
         this.db.mutationCreateList(newList);
+      }
+    );
+  };
+
+  removeList = (keyNamePair) => {
+    let key = keyNamePair.key;
+    let newKeyNamePairs = this.state.sessionData.keyNamePairs;
+    let index;
+    for (let i = 0; i < newKeyNamePairs.length; i++) {
+      if (newKeyNamePairs[i].key === key) {
+        index = i;
+      }
+    }
+    newKeyNamePairs.splice(index, 1);
+    this.sortKeyNamePairsByName(newKeyNamePairs);
+
+    this.setState(
+      (prevState) => ({
+        currentList: prevState.currentList,
+        currentItemOver: prevState.currentItemOver,
+        currentDeleteList: prevState.currentDeleteList,
+        sessionData: {
+          nextKey: prevState.sessionData.nextKey,
+          counter: prevState.sessionData.counter,
+          keyNamePairs: newKeyNamePairs,
+        },
+      }),
+      () => {
+        // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
+        // THE TRANSACTION STACK IS CLEARED
+        this.db.mutationUpdateSessionData(this.state.sessionData);
+        this.hideDeleteListModal();
       }
     );
   };
@@ -89,6 +123,7 @@ class App extends React.Component {
       (prevState) => ({
         currentList: newCurrentList,
         currentItemOver: prevState.currentItemOver,
+        currentDeleteList: prevState.currentDeleteList,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -107,11 +142,11 @@ class App extends React.Component {
   itemDragOver = (index) => {
     let newCurrentItemOver = index;
 
-
     this.setState(
       (prevState) => ({
         currentList: prevState.currentList,
         currentItemOver: newCurrentItemOver,
+        currentDeleteList: prevState.currentDeleteList,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -123,8 +158,7 @@ class App extends React.Component {
         // THE TRANSACTION STACK IS CLEARED
       }
     );
-
-  }
+  };
 
   swapItem = (newIndex, oldIndex) => {
     let newCurrentList = this.state.currentList;
@@ -138,6 +172,7 @@ class App extends React.Component {
       (prevState) => ({
         currentList: newCurrentList,
         currentItemOver: null,
+        currentDeleteList: prevState.currentDeleteList,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -173,6 +208,7 @@ class App extends React.Component {
       (prevState) => ({
         currentList: prevState.currentList,
         currentItemOver: prevState.currentItemOver,
+        currentDeleteList: prevState.currentDeleteList,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -196,6 +232,7 @@ class App extends React.Component {
       (prevState) => ({
         currentList: newCurrentList,
         currentItemOver: prevState.currentItemOver,
+        currentDeleteList: prevState.currentDeleteList,
         sessionData: prevState.sessionData,
       }),
       () => {
@@ -209,6 +246,7 @@ class App extends React.Component {
       (prevState) => ({
         currentList: null,
         currentItemOver: prevState.currentItemOver,
+        currentDeleteList: prevState.currentDeleteList,
         listKeyPairMarkedForDeletion: prevState.listKeyPairMarkedForDeletion,
         sessionData: this.state.sessionData,
       }),
@@ -217,12 +255,23 @@ class App extends React.Component {
       }
     );
   };
-  deleteList = () => {
+  deleteList = (keyNamePair) => {
     // SOMEHOW YOU ARE GOING TO HAVE TO FIGURE OUT
     // WHICH LIST IT IS THAT THE USER WANTS TO
     // DELETE AND MAKE THAT CONNECTION SO THAT THE
     // NAME PROPERLY DISPLAYS INSIDE THE MODAL
-    this.showDeleteListModal();
+    this.setState(
+      (prevState) => ({
+        currentList: prevState.currentList,
+        currentItemOver: prevState.currentItemOver,
+        currentDeleteList: keyNamePair,
+        sessionData: prevState.sessionData,
+      }),
+      () => {
+        this.showDeleteListModal();
+        // ANY AFTER EFFECTS?
+      }
+    );
   };
   // THIS FUNCTION SHOWS THE MODAL FOR PROMPTING THE USER
   // TO SEE IF THEY REALLY WANT TO DELETE THE LIST
@@ -256,7 +305,11 @@ class App extends React.Component {
           itemDragOverCallback={this.itemDragOver}
         />
         <Statusbar currentList={this.state.currentList} />
-        <DeleteModal hideDeleteListModalCallback={this.hideDeleteListModal} />
+        <DeleteModal
+          hideDeleteListModalCallback={this.hideDeleteListModal}
+          currentDeleteList={this.state.currentDeleteList}
+          removeListCallback={this.removeList}
+        />
       </div>
     );
   }
