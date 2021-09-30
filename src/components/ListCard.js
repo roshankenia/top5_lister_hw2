@@ -11,7 +11,9 @@ export default class ListCard extends React.Component {
   }
   handleClick = (event) => {
     if (event.detail === 1) {
-      this.handleLoadList(event);
+      if (!this.props.selected) {
+        this.handleLoadList(event);
+      }
     } else if (event.detail === 2) {
       this.handleToggleEdit(event);
     }

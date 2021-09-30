@@ -1,5 +1,8 @@
 import React from "react";
 import "./App.css";
+import jsTPS from "./jsTPS.js";
+import ChangeItem_Transaction from "./transactions/ChangeItem_Transaction.js";
+import MoveItem_Transaction from "./transactions/MoveItem_Transaction.js";
 
 // IMPORT DATA MANAGEMENT AND TRANSACTION STUFF
 import DBManager from "./db/DBManager";
@@ -18,8 +21,14 @@ class App extends React.Component {
     // THIS WILL TALK TO LOCAL STORAGE
     this.db = new DBManager();
 
+    // THIS WILL MANAGE OUR TRANSACTIONS
+    this.tps = new jsTPS();
+
     // GET THE SESSION DATA FROM OUR DATA MANAGER
     let loadedSessionData = this.db.queryGetSessionData();
+
+    this.undo = this.undo.bind(this);
+    this.redo = this.redo.bind(this);
 
     // SETUP THE INITIAL STATE
     this.state = {
@@ -110,6 +119,27 @@ class App extends React.Component {
       }
     );
   };
+
+  // SIMPLE UNDO/REDO FUNCTIONS
+  undo() {
+    if (this.tps.hasTransactionToUndo()) {
+      this.tps.undoTransaction();
+    }
+  }
+
+  redo() {
+    if (this.tps.hasTransactionToRedo()) {
+      this.tps.doTransaction();
+    }
+  }
+
+  renameItemTransaction = (index, textValue) => {
+    let oldText = this.state.currentList.items[index];
+    let newText = textValue;
+
+    let transaction = new ChangeItem_Transaction(this, index, oldText, newText);
+    this.tps.addTransaction(transaction);
+  };
   renameItem = (index, textValue) => {
     let newCurrentList = this.state.currentList;
 
@@ -159,6 +189,12 @@ class App extends React.Component {
       }
     );
   };
+
+  swapItemTransaction = (newIndex, oldIndex) => {
+
+    let transaction = new MoveItem_Transaction(this, oldIndex, newIndex);
+    this.tps.addTransaction(transaction);
+  }
 
   swapItem = (newIndex, oldIndex) => {
     let newCurrentList = this.state.currentList;
@@ -237,6 +273,7 @@ class App extends React.Component {
       }),
       () => {
         // ANY AFTER EFFECTS?
+        this.tps.clearAllTransactions();
       }
     );
   };
@@ -251,6 +288,7 @@ class App extends React.Component {
         sessionData: this.state.sessionData,
       }),
       () => {
+        this.tps.clearAllTransactions();
         // ANY AFTER EFFECTS?
       }
     );
@@ -287,7 +325,12 @@ class App extends React.Component {
   render() {
     return (
       <div id="app-root">
-        <Banner title="Top 5 Lister" closeCallback={this.closeCurrentList} />
+        <Banner
+          title="Top 5 Lister"
+          closeCallback={this.closeCurrentList}
+          undoCallback={this.undo}
+          redoCallback={this.redo}
+        />
         <Sidebar
           heading="Your Lists"
           currentList={this.state.currentList}
@@ -300,8 +343,8 @@ class App extends React.Component {
         <Workspace
           currentList={this.state.currentList}
           currentItemOver={this.state.currentItemOver}
-          renameItemCallback={this.renameItem}
-          swapItemCallback={this.swapItem}
+          renameItemCallback={this.renameItemTransaction}
+          swapItemCallback={this.swapItemTransaction}
           itemDragOverCallback={this.itemDragOver}
         />
         <Statusbar currentList={this.state.currentList} />

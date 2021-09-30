@@ -30,7 +30,6 @@ export default class ItemCard extends React.Component {
     if (this.state.value) {
       let index = this.props.index;
       let textValue = this.state.value;
-      console.log(this.state.value);
       this.props.renameItemCallback(index, textValue);
       this.handleToggleEdit();
     } else {
@@ -44,14 +43,11 @@ export default class ItemCard extends React.Component {
 
   handleDragStart = (event) => {
     event.dataTransfer.setData("index", this.state.index);
-    console.log(this.state.index);
   };
 
   handleDrop = (event) => {
     let newIndex = this.state.index;
     let oldIndex = event.dataTransfer.getData("index");
-    console.log(newIndex);
-    console.log(oldIndex);
     if (newIndex !== oldIndex) {
       this.props.swapItemCallback(newIndex, oldIndex);
     }
