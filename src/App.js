@@ -35,6 +35,9 @@ class App extends React.Component {
       currentList: null,
       currentItemOver: null,
       currentDeleteList: null,
+      hasUndo: null,
+      hasRedo: null,
+      hasClose: null,
       sessionData: loadedSessionData,
     };
   }
@@ -74,6 +77,9 @@ class App extends React.Component {
         currentList: newList,
         currentItemOver: prevState.currentItemOver,
         currentDeleteList: prevState.currentDeleteList,
+        hasUndo: prevState.hasUndo,
+        hasRedo: prevState.hasRedo,
+        hasClose: prevState.hasClose,
         sessionData: {
           nextKey: prevState.sessionData.nextKey + 1,
           counter: prevState.sessionData.counter + 1,
@@ -105,6 +111,9 @@ class App extends React.Component {
         currentList: prevState.currentList,
         currentItemOver: prevState.currentItemOver,
         currentDeleteList: prevState.currentDeleteList,
+        hasUndo: prevState.hasUndo,
+        hasRedo: prevState.hasRedo,
+        hasClose: prevState.hasClose,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -125,12 +134,14 @@ class App extends React.Component {
     if (this.tps.hasTransactionToUndo()) {
       this.tps.undoTransaction();
     }
+    this.setToolbarStatus();
   }
 
   redo() {
     if (this.tps.hasTransactionToRedo()) {
       this.tps.doTransaction();
     }
+    this.setToolbarStatus();
   }
 
   renameItemTransaction = (index, textValue) => {
@@ -148,12 +159,14 @@ class App extends React.Component {
         newCurrentList.items[i] = textValue;
       }
     }
-
     this.setState(
       (prevState) => ({
         currentList: newCurrentList,
         currentItemOver: prevState.currentItemOver,
         currentDeleteList: prevState.currentDeleteList,
+        hasUndo: prevState.hasUndo,
+        hasRedo: prevState.hasRedo,
+        hasClose: prevState.hasClose,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -165,6 +178,7 @@ class App extends React.Component {
         // THE TRANSACTION STACK IS CLEARED
         this.db.mutationUpdateList(newCurrentList);
         this.db.mutationUpdateSessionData(this.state.sessionData);
+        this.setToolbarStatus();
       }
     );
   };
@@ -177,6 +191,9 @@ class App extends React.Component {
         currentList: prevState.currentList,
         currentItemOver: newCurrentItemOver,
         currentDeleteList: prevState.currentDeleteList,
+        hasUndo: prevState.hasUndo,
+        hasRedo: prevState.hasRedo,
+        hasClose: prevState.hasClose,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -191,10 +208,9 @@ class App extends React.Component {
   };
 
   swapItemTransaction = (newIndex, oldIndex) => {
-
     let transaction = new MoveItem_Transaction(this, oldIndex, newIndex);
     this.tps.addTransaction(transaction);
-  }
+  };
 
   swapItem = (newIndex, oldIndex) => {
     let newCurrentList = this.state.currentList;
@@ -209,6 +225,9 @@ class App extends React.Component {
         currentList: newCurrentList,
         currentItemOver: null,
         currentDeleteList: prevState.currentDeleteList,
+        hasUndo: prevState.hasUndo,
+        hasRedo: prevState.hasRedo,
+        hasClose: prevState.hasClose,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -220,6 +239,7 @@ class App extends React.Component {
         // THE TRANSACTION STACK IS CLEARED
         this.db.mutationUpdateList(newCurrentList);
         this.db.mutationUpdateSessionData(this.state.sessionData);
+        this.setToolbarStatus();
       }
     );
   };
@@ -245,6 +265,9 @@ class App extends React.Component {
         currentList: prevState.currentList,
         currentItemOver: prevState.currentItemOver,
         currentDeleteList: prevState.currentDeleteList,
+        hasUndo: prevState.hasUndo,
+        hasRedo: prevState.hasRedo,
+        hasClose: prevState.hasClose,
         sessionData: {
           nextKey: prevState.sessionData.nextKey,
           counter: prevState.sessionData.counter,
@@ -269,6 +292,9 @@ class App extends React.Component {
         currentList: newCurrentList,
         currentItemOver: prevState.currentItemOver,
         currentDeleteList: prevState.currentDeleteList,
+        hasUndo: prevState.hasUndo,
+        hasRedo: prevState.hasRedo,
+        hasClose: true,
         sessionData: prevState.sessionData,
       }),
       () => {
@@ -284,6 +310,9 @@ class App extends React.Component {
         currentList: null,
         currentItemOver: prevState.currentItemOver,
         currentDeleteList: prevState.currentDeleteList,
+        hasUndo: false,
+        hasRedo: false,
+        hasClose: false,
         listKeyPairMarkedForDeletion: prevState.listKeyPairMarkedForDeletion,
         sessionData: this.state.sessionData,
       }),
@@ -303,6 +332,9 @@ class App extends React.Component {
         currentList: prevState.currentList,
         currentItemOver: prevState.currentItemOver,
         currentDeleteList: keyNamePair,
+        hasUndo: prevState.hasUndo,
+        hasRedo: prevState.hasRedo,
+        hasClose: prevState.hasClose,
         sessionData: prevState.sessionData,
       }),
       () => {
@@ -322,6 +354,42 @@ class App extends React.Component {
     let modal = document.getElementById("delete-modal");
     modal.classList.remove("is-visible");
   }
+
+  setToolbarStatus() {
+    let statuses = [];
+
+    if (this.tps.hasTransactionToUndo()) {
+      statuses.push(true);
+    } else {
+      statuses.push(false);
+    }
+
+    if (this.tps.hasTransactionToRedo()) {
+      statuses.push(true);
+    } else {
+      statuses.push(false);
+    }
+
+    if (this.state.currentList !== null) {
+      statuses.push(true);
+    } else {
+      statuses.push(false);
+    }
+
+    this.setState(
+      (prevState) => ({
+        currentList: prevState.currentList,
+        currentItemOver: prevState.currentItemOver,
+        currentDeleteList: prevState.currentDeleteList,
+        hasUndo: statuses[0],
+        hasRedo: statuses[1],
+        hasClose: statuses[2],
+        sessionData: prevState.sessionData,
+      }),
+      () => {}
+    );
+  }
+
   render() {
     return (
       <div id="app-root">
@@ -330,6 +398,9 @@ class App extends React.Component {
           closeCallback={this.closeCurrentList}
           undoCallback={this.undo}
           redoCallback={this.redo}
+          hasUndo={this.state.hasUndo}
+          hasRedo={this.state.hasRedo}
+          hasClose={this.state.hasClose}
         />
         <Sidebar
           heading="Your Lists"
