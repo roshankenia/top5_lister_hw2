@@ -48,7 +48,9 @@ export default class ItemCard extends React.Component {
   handleDrop = (event) => {
     let newIndex = this.state.index;
     let oldIndex = event.dataTransfer.getData("index");
-    if (newIndex !== oldIndex) {
+    console.log(newIndex);
+    console.log(oldIndex);
+    if (newIndex != oldIndex) {
       this.props.swapItemCallback(newIndex, oldIndex);
     }
   };
@@ -59,6 +61,10 @@ export default class ItemCard extends React.Component {
     let index = this.state.index;
     this.props.itemDragOverCallback(index);
   };
+
+  handleDragEnd = (event) =>{
+    this.props.itemDragEndCallback();
+  }
 
   render() {
     const { value, index, dragOver } = this.props;
@@ -76,6 +82,8 @@ export default class ItemCard extends React.Component {
           onBlur={this.handleBlur}
           onChange={this.handleUpdate}
           defaultValue={value}
+          className="top5-item"
+          autoFocus
         />
       );
     } else {
@@ -88,6 +96,7 @@ export default class ItemCard extends React.Component {
           onDragStart={this.handleDragStart}
           onDrop={this.handleDrop}
           onDragOver={this.handleDragOver}
+          onDragEnd={this.handleDragEnd}
         >
           {value}
         </div>

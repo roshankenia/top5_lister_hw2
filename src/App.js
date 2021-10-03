@@ -41,6 +41,17 @@ class App extends React.Component {
       sessionData: loadedSessionData,
     };
   }
+
+  componentDidMount() {
+    window.addEventListener("keydown", (event) => {
+      if (event.ctrlKey && event.keyCode === 90) {
+        this.undo();
+      } else if (event.ctrlKey && event.keyCode === 89) {
+        this.redo();
+      }
+    });
+  }
+
   sortKeyNamePairsByName = (keyNamePairs) => {
     keyNamePairs.sort((keyPair1, keyPair2) => {
       // GET THE LISTS
@@ -108,7 +119,7 @@ class App extends React.Component {
 
     this.setState(
       (prevState) => ({
-        currentList: prevState.currentList,
+        currentList: null,
         currentItemOver: prevState.currentItemOver,
         currentDeleteList: prevState.currentDeleteList,
         hasUndo: prevState.hasUndo,
@@ -123,6 +134,8 @@ class App extends React.Component {
       () => {
         // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
         // THE TRANSACTION STACK IS CLEARED
+        this.tps.clearAllTransactions();
+        this.setToolbarStatus();
         this.db.mutationUpdateSessionData(this.state.sessionData);
         this.hideDeleteListModal();
       }
@@ -183,6 +196,27 @@ class App extends React.Component {
     );
   };
 
+  itemDragEnd = () => {
+    this.setState(
+      (prevState) => ({
+        currentList: prevState.currentList,
+        currentItemOver: null,
+        currentDeleteList: prevState.currentDeleteList,
+        hasUndo: prevState.hasUndo,
+        hasRedo: prevState.hasRedo,
+        hasClose: prevState.hasClose,
+        sessionData: {
+          nextKey: prevState.sessionData.nextKey,
+          counter: prevState.sessionData.counter,
+          keyNamePairs: prevState.sessionData.keyNamePairs,
+        },
+      }),
+      () => {
+        // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
+        // THE TRANSACTION STACK IS CLEARED
+      }
+    );
+  };
   itemDragOver = (index) => {
     let newCurrentItemOver = index;
 
@@ -417,6 +451,7 @@ class App extends React.Component {
           renameItemCallback={this.renameItemTransaction}
           swapItemCallback={this.swapItemTransaction}
           itemDragOverCallback={this.itemDragOver}
+          itemDragEndCallback={this.itemDragEnd}
         />
         <Statusbar currentList={this.state.currentList} />
         <DeleteModal

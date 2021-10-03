@@ -9,6 +9,7 @@ export default class Workspace extends React.Component {
       swapItemCallback,
       currentItemOver,
       itemDragOverCallback,
+      itemDragEndCallback,
     } = this.props;
     if (currentList) {
       return (
@@ -31,6 +32,7 @@ export default class Workspace extends React.Component {
                   swapItemCallback={swapItemCallback}
                   dragOver={index === currentItemOver}
                   itemDragOverCallback={itemDragOverCallback}
+                  itemDragEndCallback={itemDragEndCallback}
                 />
               ))}
             </div>
