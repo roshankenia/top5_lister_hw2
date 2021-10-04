@@ -48,8 +48,6 @@ export default class ItemCard extends React.Component {
   handleDrop = (event) => {
     let newIndex = this.state.index;
     let oldIndex = event.dataTransfer.getData("index");
-    console.log(newIndex);
-    console.log(oldIndex);
     if (newIndex != oldIndex) {
       this.props.swapItemCallback(newIndex, oldIndex);
     }
@@ -62,9 +60,9 @@ export default class ItemCard extends React.Component {
     this.props.itemDragOverCallback(index);
   };
 
-  handleDragEnd = (event) =>{
+  handleDragEnd = (event) => {
     this.props.itemDragEndCallback();
-  }
+  };
 
   render() {
     const { value, index, dragOver } = this.props;
