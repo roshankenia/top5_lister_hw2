@@ -27,7 +27,11 @@ export default class ItemCard extends React.Component {
     }
   };
   handleBlur = () => {
-    if (this.state.value) {
+    if(typeof this.state.value === 'undefined'){
+      this.state.value = this.props.value;
+    }
+    
+    if (this.state.value !== this.props.value) {
       let index = this.props.index;
       let textValue = this.state.value;
       this.props.renameItemCallback(index, textValue);

@@ -110,6 +110,8 @@ class App extends React.Component {
   removeList = (keyNamePair) => {
     let key = keyNamePair.key;
     let newKeyNamePairs = this.state.sessionData.keyNamePairs;
+    let list = this.db.queryGetList(key);
+
     let index;
     for (let i = 0; i < newKeyNamePairs.length; i++) {
       if (newKeyNamePairs[i].key === key) {
@@ -119,29 +121,53 @@ class App extends React.Component {
     newKeyNamePairs.splice(index, 1);
     this.sortKeyNamePairsByName(newKeyNamePairs);
 
-    this.setState(
-      (prevState) => ({
-        currentList: null,
-        currentItemOver: prevState.currentItemOver,
-        currentDeleteList: prevState.currentDeleteList,
-        hasUndo: prevState.hasUndo,
-        hasRedo: prevState.hasRedo,
-        hasClose: prevState.hasClose,
-        sessionData: {
-          nextKey: prevState.sessionData.nextKey,
-          counter: prevState.sessionData.counter,
-          keyNamePairs: newKeyNamePairs,
-        },
-      }),
-      () => {
-        // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
-        // THE TRANSACTION STACK IS CLEARED
-        this.tps.clearAllTransactions();
-        this.setToolbarStatus();
-        this.db.mutationUpdateSessionData(this.state.sessionData);
-        this.hideDeleteListModal();
-      }
-    );
+    if (this.state.currentList !== null && this.state.currentList.key === list.key) {
+      this.setState(
+        (prevState) => ({
+          currentList: null,
+          currentItemOver: prevState.currentItemOver,
+          currentDeleteList: prevState.currentDeleteList,
+          hasUndo: prevState.hasUndo,
+          hasRedo: prevState.hasRedo,
+          hasClose: prevState.hasClose,
+          sessionData: {
+            nextKey: prevState.sessionData.nextKey,
+            counter: prevState.sessionData.counter,
+            keyNamePairs: newKeyNamePairs,
+          },
+        }),
+        () => {
+          // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
+          // THE TRANSACTION STACK IS CLEARED
+          this.tps.clearAllTransactions();
+          this.setToolbarStatus();
+          this.db.mutationUpdateSessionData(this.state.sessionData);
+          this.hideDeleteListModal();
+        }
+      );
+    } else {
+      this.setState(
+        (prevState) => ({
+          currentList: prevState.currentList,
+          currentItemOver: prevState.currentItemOver,
+          currentDeleteList: prevState.currentDeleteList,
+          hasUndo: prevState.hasUndo,
+          hasRedo: prevState.hasRedo,
+          hasClose: prevState.hasClose,
+          sessionData: {
+            nextKey: prevState.sessionData.nextKey,
+            counter: prevState.sessionData.counter,
+            keyNamePairs: newKeyNamePairs,
+          },
+        }),
+        () => {
+          // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
+          // THE TRANSACTION STACK IS CLEARED
+          this.db.mutationUpdateSessionData(this.state.sessionData);
+          this.hideDeleteListModal();
+        }
+      );
+    }
   };
 
   // SIMPLE UNDO/REDO FUNCTIONS
@@ -336,6 +362,7 @@ class App extends React.Component {
       () => {
         // ANY AFTER EFFECTS?
         this.tps.clearAllTransactions();
+        this.setToolbarStatus();
       }
     );
   };
